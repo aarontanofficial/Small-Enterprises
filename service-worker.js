@@ -1,4 +1,4 @@
-const CACHE = 'yans-pos-v2';
+const CACHE = 'yans-pos-v3';
 const ASSETS = [
   './',
   './index.html',
