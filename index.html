@@ -1,421 +1,403 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Yan's POS">
+<meta name="theme-color" content="#c0392b">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Yan's Foodhouz POS</title>
-<meta name="theme-color" content="#7a2e1d" />
-<link rel="manifest" href="manifest.json" />
-<link rel="icon" href="icons/icon-192.png" />
-<link rel="apple-touch-icon" href="icons/icon-192.png" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{
-  --char: #2a1810; --ember: #c4502b; --ember-dark: #7a2e1d;
-  --lard: #f4ead9; --paper: #fffaf2; --leaf: #5c7a4f;
-  --line: #e3d4ba; --warn: #b8331f; --gold: #d49a3a;
-  font-family: 'Inter', -apple-system, system-ui, sans-serif;
-}
-*{box-sizing:border-box;}
-body{margin:0;background:var(--lard);color:var(--char);}
-h1,h2,h3{font-family:'DM Serif Display', Georgia, serif; margin:0;}
-button{font-family:inherit;cursor:pointer;}
-input,select{font-family:inherit;}
+  :root {
+    --red: #c0392b;
+    --red-dark: #96281b;
+    --red-light: #e74c3c;
+    --orange: #e67e22;
+    --yellow: #f1c40f;
+    --green: #27ae60;
+    --blue: #2980b9;
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-300: #dee2e6;
+    --gray-400: #ced4da;
+    --gray-500: #adb5bd;
+    --gray-600: #6c757d;
+    --gray-700: #495057;
+    --gray-800: #343a40;
+    --gray-900: #212529;
+    --sidebar-w: 220px;
+    --sidebar-collapsed: 64px;
+    --white: #ffffff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --radius: 8px;
+    --radius-sm: 4px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-100); color: var(--gray-900); display: flex; height: 100dvh; overflow: hidden; }
 
-/* ===== Login screen ===== */
-#loginScreen{
-  position:fixed;inset:0;background:var(--ember-dark);z-index:100;
-  display:flex;align-items:center;justify-content:center;padding:20px;
-}
-#loginScreen.hide{display:none;}
-.login-card{background:var(--paper);border-radius:14px;padding:28px 24px;max-width:340px;width:100%;text-align:center;}
-.login-card .flame{font-size:36px;}
-.login-card h1{font-size:20px;color:var(--ember-dark);margin:8px 0 2px;}
-.login-card p{font-size:12.5px;color:#9a8868;margin:0 0 18px;}
-.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-.role-tile{border:2px solid var(--line);background:var(--paper);border-radius:10px;padding:16px 8px;}
-.role-tile.selected{border-color:var(--ember);background:#fdf0e6;}
-.role-tile .ic{font-size:24px;display:block;margin-bottom:4px;}
-.role-tile .nm{font-weight:700;font-size:13px;}
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w); min-width: var(--sidebar-w);
+    background: var(--red-dark); color: white;
+    display: flex; flex-direction: column;
+    transition: width 0.2s; overflow: hidden; z-index: 100;
+    flex-shrink: 0;
+  }
+  .sidebar.collapsed { width: var(--sidebar-collapsed); min-width: var(--sidebar-collapsed); }
+  .sidebar-brand {
+    padding: 16px 12px; display: flex; align-items: center; gap: 10px;
+    background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1);
+    min-height: 64px;
+  }
+  .brand-logo { width: 36px; height: 36px; background: var(--red-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0; }
+  .brand-text { font-size: 13px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; }
+  .brand-sub { font-size: 10px; opacity: 0.6; font-weight: 400; }
+  .sidebar-toggle { margin-left: auto; background: none; border: none; color: white; cursor: pointer; opacity: 0.7; flex-shrink: 0; padding: 4px; }
+  .sidebar-toggle:hover { opacity: 1; }
+  .sidebar-clock { padding: 10px 12px; font-size: 11px; opacity: 0.7; border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; overflow: hidden; }
+  .clock-time { font-size: 18px; font-weight: 700; opacity: 1; letter-spacing: 1px; }
+  .sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 11px 16px;
+    cursor: pointer; color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 500;
+    transition: all 0.15s; white-space: nowrap; overflow: hidden; border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.18); color: white; }
+  .nav-item i { width: 18px; text-align: center; flex-shrink: 0; font-size: 15px; }
+  .nav-label { overflow: hidden; }
+  .sidebar-user { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .user-info { display: flex; align-items: center; gap: 8px; padding: 8px; background: rgba(0,0,0,0.15); border-radius: var(--radius); cursor: pointer; }
+  .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--red-light); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .user-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; }
+  .user-role { font-size: 10px; opacity: 0.6; }
 
-/* ===== App shell: sidebar + content ===== */
-.app{display:flex;min-height:100vh;}
-.sidebar{
-  width:208px;flex-shrink:0;background:var(--ember-dark);color:var(--paper);
-  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:30;
-}
-.sidebar .brand{padding:20px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.12);}
-.sidebar .brand .flame{font-size:22px;}
-.sidebar .brand h1{font-size:16px;line-height:1.2;}
-.sidebar .brand small{display:block;font-size:9.5px;opacity:.7;letter-spacing:1.3px;text-transform:uppercase;font-family:Inter,sans-serif;}
-.sidebar nav{flex:1;padding:10px;display:flex;flex-direction:column;gap:3px;}
-.sidebar nav button{
-  display:flex;align-items:center;gap:10px;background:none;border:none;color:rgba(255,255,255,.78);
-  padding:11px 12px;border-radius:8px;font-size:13.5px;font-weight:600;text-align:left;
-}
-.sidebar nav button .ic{font-size:16px;width:20px;text-align:center;}
-.sidebar nav button.active{background:rgba(255,255,255,.14);color:#fff;}
-.sidebar .userbox{padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;}
-.sidebar .userbox .who{font-weight:700;font-size:13px;margin-bottom:2px;}
-.sidebar .userbox .role{opacity:.7;text-transform:uppercase;font-size:10px;letter-spacing:.5px;}
-.sidebar .userbox button{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;font-size:11px;padding:5px 8px;border-radius:6px;margin-top:8px;width:100%;}
-.sidebar .clock{padding:10px 16px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;opacity:.85;}
-.sidebar .clock .t{font-size:16px;font-weight:700;font-family:'DM Serif Display',serif;}
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: white; border-bottom: 1px solid var(--gray-200); padding: 0 20px; height: 56px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; box-shadow: var(--shadow); }
+  .topbar-title { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+  .topbar-badge { background: var(--red); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 600; }
+  .topbar-spacer { flex: 1; }
+  .topbar-date { font-size: 12px; color: var(--gray-500); }
 
-.content{flex:1;margin-left:208px;padding:18px 22px 90px;min-width:0;}
-.content-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
-.content-head h2{font-size:21px;color:var(--ember-dark);}
+  .content { flex: 1; overflow-y: auto; padding: 20px; }
 
-/* sub-tabs (pill nav within a section) */
-.subtabs{display:flex;gap:6px;margin-bottom:16px;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:4px;}
-.subtabs button{flex:1;background:none;border:none;padding:9px 6px;border-radius:7px;font-size:12.5px;font-weight:700;color:#9a8868;}
-.subtabs button.active{background:var(--ember);color:#fff;}
-.subpanel{display:none;}
-.subpanel.active{display:block;}
+  /* TABS */
+  .tab-bar { display: flex; gap: 2px; background: var(--gray-200); border-radius: var(--radius); padding: 3px; margin-bottom: 16px; }
+  .tab-btn { flex: 1; padding: 7px 10px; border: none; background: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; color: var(--gray-600); transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .tab-btn.active { background: white; color: var(--red); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .tab-btn i { font-size: 12px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
 
-.date-nav{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 8px;}
-.date-nav button{background:none;border:none;font-size:15px;color:var(--ember-dark);width:26px;height:26px;border-radius:6px;}
-.date-nav button:active{background:var(--lard);}
-.date-nav .lbl{font-size:13px;font-weight:700;min-width:108px;text-align:center;}
+  /* CARDS */
+  .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--gray-800); }
 
-.search-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;}
-.search-row input[type=text]{flex:1;margin-top:0;}
-.icon-btn{
-  width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:var(--ember);color:#fff;
-  font-size:18px;font-weight:700;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-}
+  /* BUTTONS */
+  .btn { padding: 8px 14px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .btn-primary { background: var(--red); color: white; }
+  .btn-primary:hover { background: var(--red-dark); }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:hover { background: #1e8449; }
+  .btn-outline { background: white; border: 1px solid var(--gray-300); color: var(--gray-700); }
+  .btn-outline:hover { background: var(--gray-100); }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+  .btn-danger { background: #e74c3c; color: white; }
+  .btn-warning { background: var(--orange); color: white; }
+  .btn-blue { background: var(--blue); color: white; }
 
-.grid-row{display:grid;gap:12px;}
-.cols-2{grid-template-columns:repeat(2,1fr);}
-.cols-3{grid-template-columns:repeat(3,1fr);}
-.cols-4{grid-template-columns:repeat(4,1fr);}
+  /* STATUS BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .badge-queued { background: #fff3cd; color: #856404; }
+  .badge-served { background: #d1e7dd; color: #0f5132; }
+  .badge-delivery { background: #cfe2ff; color: #084298; }
+  .badge-pickup { background: #e2d9f3; color: #41337a; }
+  .badge-dinein { background: #fde8d8; color: #842029; }
+  .badge-cancelled { background: var(--gray-200); color: var(--gray-600); }
+  .badge-pending { background: #fff3cd; color: #856404; }
+  .badge-confirmed { background: #d1e7dd; color: #0f5132; }
 
-.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;}
-.card h3{font-size:15px;color:var(--ember-dark);margin-bottom:8px;}
+  /* SEARCH + INPUT */
+  .search-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .search-input { flex: 1; padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 13px; }
+  .search-input:focus { outline: none; border-color: var(--red); }
 
-.tile-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
-.tile{border:2px solid var(--line);background:var(--paper);border-radius:8px;padding:10px;text-align:left;}
-.tile.selected{border-color:var(--ember);background:#fdf0e6;}
-.tile .nm{font-weight:700;font-size:13.5px;display:block;}
-.tile .pr{font-size:12px;color:var(--ember);font-weight:600;}
+  /* ======================== LOGIN ======================== */
+  #loginScreen {
+    position: fixed; inset: 0; background: var(--red-dark);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+  }
+  .login-box { background: white; border-radius: 16px; padding: 40px; width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; }
+  .login-logo { width: 64px; height: 64px; background: var(--red); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: white; margin: 0 auto 12px; }
+  .login-title { font-size: 20px; font-weight: 800; color: var(--gray-900); }
+  .login-sub { font-size: 12px; color: var(--gray-500); margin-bottom: 24px; }
+  .login-input { width: 100%; padding: 10px 14px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 14px; margin-bottom: 10px; }
+  .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .role-btn { padding: 14px 10px; border: 2px solid var(--gray-200); border-radius: var(--radius); background: white; cursor: pointer; transition: all 0.15s; }
+  .role-btn.selected { border-color: var(--red); background: #fff5f5; }
+  .role-btn i { font-size: 22px; color: var(--red); display: block; margin-bottom: 6px; }
+  .role-btn span { font-size: 12px; font-weight: 600; color: var(--gray-700); }
 
-.cart-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13.5px;}
-.cart-row .nm{flex:1;}
-.qty-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--line);background:var(--lard);font-weight:700;}
-.cart-total{display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding-top:10px;color:var(--ember-dark);}
+  /* ======================== ORDERS ======================== */
+  .order-layout { display: grid; grid-template-columns: 1fr 380px; gap: 16px; height: calc(100vh - 180px); }
+  .menu-section { display: flex; flex-direction: column; overflow: hidden; }
+  .menu-categories { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .cat-btn { padding: 5px 12px; border: 1px solid var(--gray-300); border-radius: 20px; background: white; cursor: pointer; font-size: 11px; font-weight: 500; color: var(--gray-600); transition: all 0.15s; }
+  .cat-btn.active { background: var(--red); border-color: var(--red); color: white; }
+  .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; overflow-y: auto; flex: 1; padding-right: 4px; }
+  .menu-tile {
+    background: white; border: 1px solid var(--gray-200); border-radius: var(--radius);
+    padding: 12px 8px; cursor: pointer; text-align: center; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .menu-tile:hover { border-color: var(--red); box-shadow: 0 2px 8px rgba(192,57,43,0.15); transform: translateY(-1px); }
+  .menu-tile.out-of-stock { opacity: 0.5; cursor: not-allowed; }
+  .tile-icon { font-size: 24px; }
+  .tile-name { font-size: 11px; font-weight: 600; color: var(--gray-800); line-height: 1.2; }
+  .tile-price { font-size: 13px; font-weight: 700; color: var(--red); }
+  .tile-stock { font-size: 10px; color: var(--gray-500); }
 
-select,input[type=text],input[type=number],input[type=date]{
-  width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--paper);font-size:13.5px;margin-top:4px;
-}
-label{font-size:12px;font-weight:600;color:#8a7256;text-transform:uppercase;letter-spacing:.4px;}
-.field{margin-bottom:10px;}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  /* CART */
+  .cart-panel { background: white; border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
+  .cart-header { padding: 12px 16px; border-bottom: 1px solid var(--gray-200); }
+  .cart-header-title { font-size: 14px; font-weight: 700; }
+  .order-type-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .type-btn { flex: 1; padding: 7px 8px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); background: white; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--gray-600); transition: all 0.15s; text-align: center; min-width: 60px; }
+  .type-btn.active { background: var(--red); border-color: var(--red); color: white; }
+  .cart-body { flex: 1; overflow-y: auto; padding: 8px 12px; }
+  .cart-empty { text-align: center; padding: 40px 20px; color: var(--gray-400); }
+  .cart-empty i { font-size: 36px; display: block; margin-bottom: 8px; }
+  .cart-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--gray-100); }
+  .cart-item-name { flex: 1; font-size: 12px; font-weight: 500; }
+  .cart-qty { display: flex; align-items: center; gap: 4px; }
+  .qty-btn { width: 22px; height: 22px; border: 1px solid var(--gray-300); background: white; border-radius: 4px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+  .qty-btn:hover { background: var(--gray-100); }
+  .cart-item-price { font-size: 12px; font-weight: 700; color: var(--red); min-width: 55px; text-align: right; }
+  .cart-footer { padding: 12px; border-top: 1px solid var(--gray-200); }
+  .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cart-total-label { font-size: 13px; color: var(--gray-600); }
+  .cart-total-amount { font-size: 20px; font-weight: 800; color: var(--red); }
 
-.btn{display:block;width:100%;text-align:center;padding:12px;border-radius:8px;border:none;font-weight:700;font-size:14px;}
-.btn-primary{background:var(--ember);color:#fff;}
-.btn-primary:active{background:var(--ember-dark);}
-.btn-ghost{background:none;border:1px solid var(--line);color:var(--ember-dark);}
-.btn-danger{background:none;color:var(--warn);border:1px solid #e3b3aa;}
-.btn-sm{padding:7px 10px;font-size:12.5px;width:auto;display:inline-block;}
+  /* RIDER SELECTOR */
+  .rider-select-row { margin-top: 8px; }
+  .rider-select { width: 100%; padding: 8px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 12px; }
+  .delivery-address { margin-top: 6px; }
+  .delivery-address input { width: 100%; padding: 8px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 12px; margin-bottom: 4px; }
 
-.badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.4px;}
-.b-dinein{background:#e4ecda;color:var(--leaf);}
-.b-pickup{background:#fff3da;color:var(--gold);}
-.b-delivery{background:#e8f0ff;color:#2a5db0;}
-.b-paid{background:#e4ecda;color:var(--leaf);}
-.b-pending{background:#fde7d8;color:var(--ember-dark);}
-.b-queued{background:#fde7d8;color:var(--ember-dark);}
-.b-served{background:#e4ecda;color:var(--leaf);}
+  /* PAYMENT */
+  .payment-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .pay-btn { padding: 8px; border: 1px solid var(--gray-300); background: white; border-radius: var(--radius-sm); cursor: pointer; font-size: 11px; font-weight: 600; color: var(--gray-600); text-align: center; transition: all 0.15s; }
+  .pay-btn.active { background: var(--green); border-color: var(--green); color: white; }
+  .gcash-ref-input { width: 100%; padding: 7px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 12px; margin-top: 6px; }
 
-.order-card{position:relative;}
-.order-card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-.order-card .items{font-size:13px;color:#5a4a38;margin:6px 0;}
-.order-card .meta{font-size:11.5px;color:#9a8868;}
-.order-card .total{font-weight:700;color:var(--ember-dark);font-size:15px;}
-.order-card .actions{margin-top:10px;display:flex;gap:8px;}
+  /* QUEUE */
+  .queue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .queue-col-header { font-size: 12px; font-weight: 700; color: var(--gray-600); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .queue-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--gray-300); }
+  .queue-card.queued { border-left-color: var(--orange); }
+  .queue-card.served { border-left-color: var(--green); opacity: 0.8; }
+  .queue-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .queue-order-no { font-size: 14px; font-weight: 800; color: var(--gray-900); }
+  .queue-items { font-size: 11px; color: var(--gray-600); margin-bottom: 6px; line-height: 1.6; }
+  .queue-footer { display: flex; justify-content: space-between; align-items: center; }
+  .queue-total { font-size: 12px; font-weight: 700; color: var(--red); }
+  .queue-time { font-size: 10px; color: var(--gray-400); }
 
-.status-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.status-col h3{display:flex;align-items:center;gap:8px;}
-.status-col .count{background:var(--ember);color:#fff;font-size:11px;border-radius:99px;padding:1px 8px;}
+  /* HISTORY */
+  .history-filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .history-table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--gray-100); padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 700; color: var(--gray-600); border-bottom: 1px solid var(--gray-200); white-space: nowrap; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  tr:hover td { background: var(--gray-50, #fafafa); }
 
-.empty{text-align:center;color:#a9967a;padding:30px 10px;font-size:13.5px;}
-.empty .ico{font-size:30px;display:block;margin-bottom:6px;}
+  /* INVENTORY */
+  .inventory-date-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .date-nav-btn { background: white; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); padding: 5px 10px; cursor: pointer; font-size: 13px; }
+  .date-nav-label { font-size: 13px; font-weight: 600; color: var(--gray-800); flex: 1; text-align: center; }
+  .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .inv-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
+  .inv-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+  .inv-unit { font-size: 10px; color: var(--gray-500); margin-bottom: 8px; }
+  .inv-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .inv-label { font-size: 11px; color: var(--gray-500); }
+  .inv-value { font-size: 12px; font-weight: 600; }
+  .inv-value.low { color: #e74c3c; }
+  .inv-value.ok { color: var(--green); }
+  .inv-verify { width: 100%; margin-top: 8px; padding: 5px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 11px; }
+  .inv-verify-btn { width: 100%; margin-top: 4px; padding: 5px; background: var(--blue); color: white; border: none; border-radius: var(--radius-sm); font-size: 11px; cursor: pointer; }
+  .mismatch { background: #fff5f5; border-color: var(--red); }
 
-.fab{position:fixed;bottom:18px;right:18px;width:56px;height:56px;border-radius:50%;background:var(--ember);color:#fff;border:none;font-size:26px;box-shadow:0 6px 14px rgba(196,80,43,.4);z-index:25;}
+  /* GCASH */
+  .gcash-list { display: flex; flex-direction: column; gap: 8px; }
+  .gcash-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px; display: flex; align-items: center; gap: 12px; }
+  .gcash-icon { width: 36px; height: 36px; background: #0075cc; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; }
+  .gcash-info { flex: 1; }
+  .gcash-ref { font-size: 13px; font-weight: 700; }
+  .gcash-meta { font-size: 11px; color: var(--gray-500); }
+  .gcash-amount { font-size: 14px; font-weight: 800; color: var(--green); }
 
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-.stat{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;}
-.stat .n{font-size:22px;font-weight:700;color:var(--ember-dark);font-family:'DM Serif Display',serif;}
-.stat .l{font-size:11px;color:#9a8868;text-transform:uppercase;letter-spacing:.5px;}
+  /* DASHBOARD */
+  .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+  .stat-label { font-size: 11px; color: var(--gray-500); font-weight: 600; margin-bottom: 4px; }
+  .stat-value { font-size: 24px; font-weight: 800; color: var(--gray-900); }
+  .stat-sub { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .chart-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+  .chart-title { font-size: 13px; font-weight: 700; margin-bottom: 12px; }
 
-.low{color:var(--warn);font-weight:700;}
-.variance{color:var(--warn);font-weight:700;font-size:11.5px;}
-.ok-variance{color:var(--leaf);font-weight:700;font-size:11.5px;}
+  /* TRANSACTIONS */
+  .tx-header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
 
-.sheet-overlay{position:fixed;inset:0;background:rgba(42,24,16,.45);z-index:40;display:none;align-items:flex-end;justify-content:center;}
-.sheet-overlay.show{display:flex;}
-.sheet{background:var(--lard);width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:18px;max-height:88vh;overflow-y:auto;animation:up .22s ease;}
-@keyframes up{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.sheet h2{font-size:19px;margin-bottom:12px;color:var(--ember-dark);}
-.sheet-close{float:right;background:none;border:none;font-size:20px;color:#9a8868;}
+  /* DELIVERY RIDER VIEW */
+  .rider-queue-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; margin-bottom: 10px; border-left: 3px solid var(--blue); }
+  .rider-queue-card.accepted { border-left-color: var(--orange); }
+  .rider-queue-card.on-way { border-left-color: var(--yellow); }
+  .rider-queue-card.delivered { border-left-color: var(--green); }
+  .proof-section { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .photo-thumb { aspect-ratio: 1; background: var(--gray-100); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 24px; border: 2px dashed var(--gray-300); overflow: hidden; }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-.chart-wrap{position:relative;height:220px;}
+  /* DATE NAV */
+  .date-nav { display: flex; align-items: center; gap: 8px; }
+  .date-nav button { background: white; border: 1px solid var(--gray-300); padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; }
+  .date-nav span { font-size: 13px; font-weight: 600; min-width: 100px; text-align: center; }
 
-/* Receipt */
-.receipt{background:#fff;border:1px dashed #c9b691;border-radius:8px;padding:16px;font-family:'Courier New',monospace;font-size:12.5px;}
-.receipt .rhead{text-align:center;margin-bottom:10px;}
-.receipt .rhead b{font-size:14px;}
-.receipt hr{border:none;border-top:1px dashed #c9b691;margin:8px 0;}
-.receipt .rline{display:flex;justify-content:space-between;}
-.receipt .rtotal{display:flex;justify-content:space-between;font-weight:700;font-size:14px;margin-top:6px;}
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal-box { background: white; border-radius: 12px; padding: 24px; max-width: 480px; width: 100%; max-height: 80vh; overflow-y: auto; }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray-500); }
+  .receipt { font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; background: var(--gray-100); padding: 16px; border-radius: var(--radius-sm); }
+  .receipt-center { text-align: center; }
+  .receipt-divider { border-top: 1px dashed var(--gray-400); margin: 6px 0; }
 
-@media(max-width:760px){
-  .sidebar{width:100%;height:auto;position:fixed;top:auto;bottom:0;left:0;right:0;flex-direction:row;align-items:center;}
-  .sidebar .brand,.sidebar .clock,.sidebar .userbox{display:none;}
-  .sidebar nav{flex-direction:row;width:100%;padding:6px 4px;}
-  .sidebar nav button{flex:1;flex-direction:column;gap:2px;font-size:10.5px;padding:7px 2px;text-align:center;}
-  .sidebar nav button .ic{font-size:18px;}
-  .content{margin-left:0;padding:14px 14px 80px;}
-  .stat-grid,.cols-2,.cols-3,.cols-4,.status-cols{grid-template-columns:repeat(2,1fr);}
-}
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-900); color: white; padding: 10px 16px; border-radius: var(--radius); font-size: 12px; z-index: 9999; animation: slideIn 0.3s ease; }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* ADD INGREDIENT MODAL */
+  .form-group { margin-bottom: 12px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-700); margin-bottom: 4px; }
+  .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 13px; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--red); }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .bottom-nav { display: flex; }
+    .order-layout { grid-template-columns: 1fr; height: auto; }
+    .cart-panel { height: auto; }
+    .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid { grid-template-columns: 1fr; }
+    .queue-grid { grid-template-columns: 1fr; }
+  }
+  .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--gray-200); z-index: 100; }
+  .bottom-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px; cursor: pointer; color: var(--gray-500); font-size: 10px; gap: 2px; border: none; background: none; }
+  .bottom-nav-item.active { color: var(--red); }
+  .bottom-nav-item i { font-size: 18px; }
+
+  /* MISC */
+  .section-label { font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
+  .empty-state i { font-size: 40px; display: block; margin-bottom: 10px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .map-placeholder { background: var(--gray-100); border-radius: var(--radius); padding: 20px; text-align: center; color: var(--gray-400); border: 2px dashed var(--gray-300); margin-top: 8px; }
+  .flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  input[type="date"] { padding: 6px 10px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 12px; }
+  select { padding: 6px 10px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 12px; background: white; }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN SCREEN -->
 <div id="loginScreen">
-  <div class="login-card">
-    <span class="flame">🔥</span>
-    <h1>Yan's Foodhouz</h1>
-    <p>Sign in to continue</p>
-    <div class="role-grid" id="roleTiles">
-      <button class="role-tile" data-role="cashier"><span class="ic">🧾</span><span class="nm">Cashier</span></button>
-      <button class="role-tile" data-role="rider"><span class="ic">🛵</span><span class="nm">Delivery Rider</span></button>
+  <div class="login-box">
+    <div class="login-logo">Y</div>
+    <div class="login-title">Yan's Foodhouz</div>
+    <div class="login-sub">Sign in to continue</div>
+    <input class="login-input" id="loginName" type="text" placeholder="Your name" maxlength="30">
+    <div class="section-label" style="text-align:left; margin-bottom:8px;">Select Role</div>
+    <div class="role-grid">
+      <button class="role-btn selected" onclick="selectRole('cashier',this)">
+        <i class="fa fa-cash-register"></i>
+        <span>Cashier</span>
+      </button>
+      <button class="role-btn" onclick="selectRole('rider',this)">
+        <i class="fa fa-motorcycle"></i>
+        <span>Delivery Rider</span>
+      </button>
     </div>
-    <div class="field" style="text-align:left;">
-      <label>Your name</label>
-      <input type="text" id="loginName" placeholder="e.g. Maria">
-    </div>
-    <button class="btn btn-primary" id="loginBtn">Log in</button>
+    <button class="btn btn-primary" style="width:100%; justify-content:center; padding:12px;" onclick="doLogin()">
+      <i class="fa fa-sign-in-alt"></i> Sign In
+    </button>
   </div>
 </div>
 
-<div class="app">
-
-  <aside class="sidebar">
-    <div class="brand">
-      <span class="flame">🔥</span>
-      <div><h1>Yan's Foodhouz</h1><small>Ulam &amp; Pulutan</small></div>
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-logo">Y</div>
+    <div class="brand-text">
+      Yan's Foodhouz
+      <div class="brand-sub">POS System</div>
     </div>
-    <nav id="tabs">
-      <button data-view="orders" data-roles="cashier,rider" class="active"><span class="ic">📋</span>Orders</button>
-      <button data-view="inventory" data-roles="cashier"><span class="ic">📦</span>Inventory</button>
-      <button data-view="payments" data-roles="cashier"><span class="ic">💳</span>GCash</button>
-      <button data-view="sales" data-roles="cashier,rider"><span class="ic">📊</span>Sales</button>
-      <button data-view="menu" data-roles="cashier"><span class="ic">🍲</span>Menu</button>
-    </nav>
-    <div class="userbox">
-      <div class="who" id="ubName">—</div>
-      <div class="role" id="ubRole">—</div>
-      <button id="logoutBtn">Log out</button>
+    <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
+  </div>
+  <div class="sidebar-clock">
+    <div class="clock-time" id="clockTime">--:--:--</div>
+    <div id="clockDate">---</div>
+  </div>
+  <div class="sidebar-nav" id="sidebarNav">
+    <!-- filled by JS based on role -->
+  </div>
+  <div class="sidebar-user">
+    <div class="user-info" onclick="doLogout()">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div>
+        <div class="user-name" id="userName">Guest</div>
+        <div class="user-role" id="userRoleLabel">Sign out</div>
+      </div>
     </div>
-    <div class="clock">
-      <div class="t" id="sidebarClock">--:--</div>
-      <div id="sidebarDate">-</div>
-    </div>
-  </aside>
+  </div>
+</nav>
 
-  <div class="content">
-
-    <!-- ORDERS VIEW -->
-    <section class="view-section" id="view-orders">
-      <div class="content-head"><h2>Orders</h2></div>
-      <div class="subtabs" id="orderSubtabs">
-        <button data-sub="new" class="active">New Order</button>
-        <button data-sub="queue">Queue</button>
-        <button data-sub="history">History</button>
-      </div>
-
-      <!-- New Order panel -->
-      <div class="subpanel active" id="sub-new">
-        <div class="field">
-          <label>Order type</label>
-          <div class="tile-grid" id="typeTiles"></div>
-        </div>
-        <div class="field" id="platformField" style="display:none;">
-          <label>Delivery platform</label>
-          <div class="tile-grid" id="platformTiles"></div>
-        </div>
-        <div class="field">
-          <label>Menu</label>
-          <div class="tile-grid" id="orderMenuGrid"></div>
-        </div>
-        <div class="card" id="cartCard">
-          <h3>Cart</h3>
-          <div id="cartRows"></div>
-          <div class="cart-total"><span>Total</span><span id="cartTotal">₱0</span></div>
-        </div>
-        <div class="field">
-          <label>Payment method</label>
-          <div class="tile-grid" id="payTiles"></div>
-        </div>
-        <div class="field" id="gcashRefField" style="display:none;">
-          <label>GCash reference no.</label>
-          <input type="text" id="gcashRefInput" placeholder="e.g. 1234567890123">
-        </div>
-        <button class="btn btn-primary" id="confirmOrderBtn">Place Order — <span id="confirmTotal">₱0</span></button>
-      </div>
-
-      <!-- Queue panel: two columns -->
-      <div class="subpanel" id="sub-queue">
-        <div class="status-cols">
-          <div>
-            <h3>🕒 Queued <span class="count" id="queuedCount">0</span></h3>
-            <div id="queuedList"></div>
-          </div>
-          <div>
-            <h3>✅ Served / Delivered <span class="count" id="servedCount">0</span></h3>
-            <div id="servedList"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- History panel -->
-      <div class="subpanel" id="sub-history">
-        <div class="content-head">
-          <div></div>
-          <div class="date-nav" id="histDateNav">
-            <button data-act="prev">‹</button><span class="lbl" id="histDateLbl">Today</span><button data-act="next">›</button>
-          </div>
-        </div>
-        <div class="grid-row cols-3" id="historyList"></div>
-      </div>
-    </section>
-
-    <!-- INVENTORY VIEW -->
-    <section class="view-section" id="view-inventory" style="display:none;">
-      <div class="content-head">
-        <h2>Inventory — Live Stock</h2>
-        <div class="date-nav" id="invDateNav">
-          <button data-act="prev">‹</button><span class="lbl" id="invDateLbl">Today</span><button data-act="next">›</button>
-        </div>
-      </div>
-      <div class="search-row">
-        <input type="text" id="invSearch" placeholder="Search ingredient...">
-        <button class="icon-btn" id="addInvBtn">+</button>
-      </div>
-      <div class="card">
-        <div style="font-size:12px;color:#9a8868;margin-bottom:10px;">Stock auto-deducts as orders come in (estimate). Tap an item to verify the actual count.</div>
-        <button class="btn btn-ghost" id="endDayBtn" style="margin-bottom:10px;">End shift → carry verified stock to next day</button>
-        <div class="grid-row cols-2" id="invList"></div>
-      </div>
-    </section>
-
-    <!-- PAYMENTS VIEW -->
-    <section class="view-section" id="view-payments" style="display:none;">
-      <div class="content-head">
-        <h2>GCash Confirmations</h2>
-        <div class="date-nav" id="gcashDateNav">
-          <button data-act="prev">‹</button><span class="lbl" id="gcashDateLbl">Today</span><button data-act="next">›</button>
-        </div>
-      </div>
-      <div class="grid-row cols-3" id="gcashList"></div>
-    </section>
-
-    <!-- SALES VIEW -->
-    <section class="view-section" id="view-sales" style="display:none;">
-      <div class="content-head">
-        <h2>Sales Summary</h2>
-        <div class="date-nav" id="salesDateNav">
-          <button data-act="prev">‹</button><span class="lbl" id="salesDateLbl">Today</span><button data-act="next">›</button>
-        </div>
-      </div>
-      <div class="stat-grid" id="statGrid"></div>
-      <div class="grid-row cols-2" style="margin-top:14px;">
-        <div class="card"><h3>Yesterday vs Today — Revenue</h3><div class="chart-wrap"><canvas id="revChart"></canvas></div></div>
-        <div class="card"><h3>Best Sellers (selected day)</h3><div class="chart-wrap"><canvas id="bestChart"></canvas></div></div>
-      </div>
-      <div class="card" style="margin-top:14px;">
-        <h3>🛵 Live Deliveries</h3>
-        <div class="grid-row cols-3" id="deliveryList"></div>
-      </div>
-    </section>
-
-    <!-- MENU VIEW -->
-    <section class="view-section" id="view-menu" style="display:none;">
-      <div class="content-head"><h2>Menu Items</h2></div>
-      <div class="search-row">
-        <input type="text" id="menuSearch" placeholder="Search menu...">
-        <button class="icon-btn" id="addMenuBtn">+</button>
-      </div>
-      <div class="grid-row cols-3" id="menuMgmtList"></div>
-    </section>
-
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <span class="topbar-badge" id="queueBadge" style="display:none">0</span>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-date" id="topbarDate"></div>
+  </div>
+  <div class="content" id="mainContent">
+    <!-- dynamic content -->
   </div>
 </div>
 
-<button class="fab" id="newOrderFab" title="New order">+</button>
+<!-- BOTTOM NAV (mobile) -->
+<div class="bottom-nav" id="bottomNav"></div>
 
-<!-- Add inventory sheet -->
-<div class="sheet-overlay" id="invSheetOverlay">
-  <div class="sheet">
-    <button class="sheet-close" data-close="invSheetOverlay">✕</button>
-    <h2>Add / Edit Ingredient</h2>
-    <input type="hidden" id="invEditId">
-    <div class="field"><label>Name</label><input type="text" id="invName" placeholder="e.g. Pork Belly"></div>
-    <div class="row2">
-      <div class="field"><label>Qty on hand (estimate)</label><input type="number" id="invQty" placeholder="0"></div>
-      <div class="field"><label>Unit</label><input type="text" id="invUnit" placeholder="kg / pcs / L"></div>
-    </div>
-    <div class="field"><label>Low-stock alert below</label><input type="number" id="invLow" placeholder="0"></div>
-    <button class="btn btn-primary" id="saveInvBtn">Save</button>
-    <button class="btn btn-danger" id="deleteInvBtn" style="margin-top:8px;display:none;">Delete ingredient</button>
-  </div>
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box" id="modalBox"></div>
 </div>
 
-<!-- Verify stock sheet -->
-<div class="sheet-overlay" id="verifySheetOverlay">
-  <div class="sheet">
-    <button class="sheet-close" data-close="verifySheetOverlay">✕</button>
-    <h2>Verify Stock Count</h2>
-    <input type="hidden" id="verifyId">
-    <p id="verifyEstLine" style="font-size:13px;color:#5a4a38;"></p>
-    <div class="field"><label>Actual count on hand</label><input type="number" id="verifyActual" placeholder="0"></div>
-    <button class="btn btn-primary" id="saveVerifyBtn">Save verified count</button>
-  </div>
-</div>
-
-<!-- Add menu item sheet -->
-<div class="sheet-overlay" id="menuSheetOverlay">
-  <div class="sheet">
-    <button class="sheet-close" data-close="menuSheetOverlay">✕</button>
-    <h2>Add / Edit Menu Item</h2>
-    <input type="hidden" id="menuEditId">
-    <div class="field"><label>Name</label><input type="text" id="menuName" placeholder="e.g. Sisig"></div>
-    <div class="row2">
-      <div class="field"><label>Price (₱)</label><input type="number" id="menuPrice" placeholder="0"></div>
-      <div class="field"><label>Category</label><input type="text" id="menuCat" placeholder="Ulam / Pulutan"></div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Uses ingredient (for stock tracking)</label>
-        <select id="menuRecipeIng"><option value="">— none —</option></select>
-      </div>
-      <div class="field"><label>Qty used per order</label><input type="number" step="0.01" id="menuRecipeQty" placeholder="0"></div>
-    </div>
-    <button class="btn btn-primary" id="saveMenuBtn">Save</button>
-    <button class="btn btn-danger" id="deleteMenuBtn" style="margin-top:8px;display:none;">Delete item</button>
-  </div>
-</div>
-
-<!-- Receipt sheet -->
-<div class="sheet-overlay" id="receiptSheetOverlay">
-  <div class="sheet">
-    <button class="sheet-close" data-close="receiptSheetOverlay">✕</button>
-    <h2>Receipt</h2>
-    <div class="receipt" id="receiptBody"></div>
-  </div>
-</div>
+<!-- TOAST -->
+<div class="toast" id="toast" style="display:none"></div>
 
 <script src="app.js"></script>
 </body>
