@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Yan's Foodhouz POS</title>
+<meta name="theme-color" content="#7a2e1d" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<style>
+:root{
+  --char: #2a1810;
+  --ember: #c4502b;
+  --ember-dark: #7a2e1d;
+  --lard: #f4ead9;
+  --paper: #fffaf2;
+  --leaf: #5c7a4f;
+  --line: #e3d4ba;
+  --warn: #b8331f;
+  --gold: #d49a3a;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--lard);color:var(--char);}
+h1,h2,h3{font-family:'DM Serif Display', Georgia, serif; margin:0;}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+
+/* Header */
+.topbar{
+  background:var(--ember-dark);
+  color:var(--paper);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;top:0;z-index:20;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.topbar .brand{display:flex;align-items:center;gap:10px;}
+.brand .flame{font-size:22px;}
+.brand h1{font-size:18px;letter-spacing:.3px;}
+.brand small{display:block;font-size:10px;opacity:.75;letter-spacing:1.5px;text-transform:uppercase;font-family:Inter,sans-serif;}
+
+/* Tabs */
+nav.tabs{
+  display:flex;
+  background:var(--paper);
+  border-bottom:2px solid var(--line);
+  position:sticky;top:56px;z-index:19;
+  overflow-x:auto;
+}
+nav.tabs button{
+  flex:1;min-width:90px;
+  border:none;background:none;
+  padding:12px 6px;font-size:13px;font-weight:600;color:#8a7256;
+  border-bottom:3px solid transparent;
+  white-space:nowrap;
+}
+nav.tabs button.active{color:var(--ember-dark);border-bottom-color:var(--ember);}
+
+main{padding:14px;max-width:780px;margin:0 auto;padding-bottom:90px;}
+.view{display:none;}
+.view.active{display:block;animation:fade .2s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;}}
+
+.card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:12px;
+}
+.card h3{font-size:15px;color:var(--ember-dark);margin-bottom:8px;}
+
+/* Order entry */
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.menu-item{
+  border:1px solid var(--line);background:var(--paper);
+  border-radius:8px;padding:10px;text-align:left;
+}
+.menu-item:active{background:#fbeede;}
+.menu-item .nm{font-weight:700;font-size:13.5px;display:block;}
+.menu-item .pr{font-size:12px;color:var(--ember);font-weight:600;}
+
+.cart-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 0;border-bottom:1px dashed var(--line);
+  font-size:13.5px;
+}
+.cart-row .nm{flex:1;}
+.qty-btn{
+  width:26px;height:26px;border-radius:6px;border:1px solid var(--line);
+  background:var(--lard);font-weight:700;
+}
+.cart-total{
+  display:flex;justify-content:space-between;font-size:16px;font-weight:700;
+  padding-top:10px;color:var(--ember-dark);
+}
+
+select,input[type=text],input[type=number]{
+  width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;
+  background:var(--paper);font-size:13.5px;margin-top:4px;
+}
+label{font-size:12px;font-weight:600;color:#8a7256;text-transform:uppercase;letter-spacing:.4px;}
+.field{margin-bottom:10px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.btn{
+  display:block;width:100%;text-align:center;padding:12px;border-radius:8px;
+  border:none;font-weight:700;font-size:14px;
+}
+.btn-primary{background:var(--ember);color:#fff;}
+.btn-primary:active{background:var(--ember-dark);}
+.btn-ghost{background:none;border:1px solid var(--line);color:var(--ember-dark);}
+.btn-danger{background:none;color:var(--warn);border:1px solid #e3b3aa;}
+
+.badge{
+  display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;
+  border-radius:99px;text-transform:uppercase;letter-spacing:.4px;
+}
+.b-walkin{background:#e4ecda;color:var(--leaf);}
+.b-grab{background:#e8f0ff;color:#2a5db0;}
+.b-panda{background:#ffe6ee;color:#c23566;}
+.b-pickup{background:#fff3da;color:var(--gold);}
+.b-paid{background:#e4ecda;color:var(--leaf);}
+.b-pending{background:#fde7d8;color:var(--ember-dark);}
+
+.order-card{position:relative;}
+.order-card .top{display:flex;justify-content:space-between;align-items:flex-start;}
+.order-card .items{font-size:13px;color:#5a4a38;margin:6px 0;}
+.order-card .meta{font-size:11.5px;color:#9a8868;}
+.order-card .total{font-weight:700;color:var(--ember-dark);font-size:15px;}
+
+.empty{
+  text-align:center;color:#a9967a;padding:30px 10px;font-size:13.5px;
+}
+.empty .ico{font-size:30px;display:block;margin-bottom:6px;}
+
+.fab{
+  position:fixed;bottom:18px;right:18px;
+  width:56px;height:56px;border-radius:50%;
+  background:var(--ember);color:#fff;border:none;
+  font-size:26px;box-shadow:0 6px 14px rgba(196,80,43,.4);
+  z-index:25;
+}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;}
+.stat .n{font-size:22px;font-weight:700;color:var(--ember-dark);font-family:'DM Serif Display',serif;}
+.stat .l{font-size:11px;color:#9a8868;text-transform:uppercase;letter-spacing:.5px;}
+
+.low{color:var(--warn);font-weight:700;}
+
+.sheet-overlay{
+  position:fixed;inset:0;background:rgba(42,24,16,.45);z-index:30;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.sheet-overlay.show{display:flex;}
+.sheet{
+  background:var(--lard);width:100%;max-width:780px;
+  border-radius:16px 16px 0 0;padding:18px;max-height:88vh;overflow-y:auto;
+  animation:up .22s ease;
+}
+@keyframes up{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.sheet h2{font-size:19px;margin-bottom:12px;color:var(--ember-dark);}
+.sheet-close{float:right;background:none;border:none;font-size:20px;color:#9a8868;}
+
+@media(min-width:600px){
+  .menu-grid{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="flame">🔥</span>
+    <div>
+      <h1>Yan's Foodhouz</h1>
+      <small>Ulam &amp; Pulutan • Paluto</small>
+    </div>
+  </div>
+  <button id="syncStatus" class="btn-ghost" style="padding:6px 10px;font-size:11px;color:#fff;border-color:rgba(255,255,255,.3);">●&nbsp;Offline-ready</button>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-view="orders" class="active">Orders</button>
+  <button data-view="inventory">Inventory</button>
+  <button data-view="payments">GCash</button>
+  <button data-view="sales">Sales</button>
+  <button data-view="menu">Menu</button>
+</nav>
+
+<main>
+
+  <!-- ORDERS VIEW -->
+  <section class="view active" id="view-orders">
+    <div class="card">
+      <h3>Today's Queue</h3>
+      <div id="orderList"></div>
+    </div>
+  </section>
+
+  <!-- INVENTORY VIEW -->
+  <section class="view" id="view-inventory">
+    <div class="card">
+      <h3>Stock Levels</h3>
+      <div id="invList"></div>
+    </div>
+    <button class="btn btn-ghost" id="addInvBtn">+ Add ingredient</button>
+  </section>
+
+  <!-- PAYMENTS VIEW -->
+  <section class="view" id="view-payments">
+    <div class="card">
+      <h3>GCash Confirmations</h3>
+      <div id="gcashList"></div>
+    </div>
+  </section>
+
+  <!-- SALES VIEW -->
+  <section class="view" id="view-sales">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card" style="margin-top:12px;">
+      <h3>Best Sellers (today)</h3>
+      <div id="bestSellers"></div>
+    </div>
+    <div class="card">
+      <h3>By Source</h3>
+      <div id="bySource"></div>
+    </div>
+  </section>
+
+  <!-- MENU VIEW -->
+  <section class="view" id="view-menu">
+    <div class="card">
+      <h3>Menu Items</h3>
+      <div id="menuMgmtList"></div>
+    </div>
+    <button class="btn btn-ghost" id="addMenuBtn">+ Add menu item</button>
+  </section>
+
+</main>
+
+<button class="fab" id="newOrderFab" title="New order">+</button>
+
+<!-- New Order Sheet -->
+<div class="sheet-overlay" id="orderSheetOverlay">
+  <div class="sheet">
+    <button class="sheet-close" data-close="orderSheetOverlay">✕</button>
+    <h2>New Order</h2>
+
+    <div class="field">
+      <label>Source</label>
+      <select id="orderSource">
+        <option value="walkin">Walk-in</option>
+        <option value="grab">GrabFood</option>
+        <option value="panda">FoodPanda</option>
+        <option value="pickup">Pickup / Call-in</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Menu</label>
+      <div class="menu-grid" id="orderMenuGrid"></div>
+    </div>
+
+    <div class="card" id="cartCard">
+      <h3>Cart</h3>
+      <div id="cartRows"></div>
+      <div class="cart-total"><span>Total</span><span id="cartTotal">₱0</span></div>
+    </div>
+
+    <div class="field">
+      <label><input type="checkbox" id="customerSupplied" style="width:auto;margin-right:6px;">Customer-supplied ingredients (paluto)</label>
+    </div>
+
+    <div class="field">
+      <label>Payment method</label>
+      <select id="payMethod">
+        <option value="cash">Cash</option>
+        <option value="gcash">GCash</option>
+      </select>
+    </div>
+
+    <div class="field" id="gcashRefField" style="display:none;">
+      <label>GCash reference no.</label>
+      <input type="text" id="gcashRefInput" placeholder="e.g. 1234567890123">
+    </div>
+
+    <button class="btn btn-primary" id="confirmOrderBtn">Place Order — <span id="confirmTotal">₱0</span></button>
+  </div>
+</div>
+
+<!-- Add inventory sheet -->
+<div class="sheet-overlay" id="invSheetOverlay">
+  <div class="sheet">
+    <button class="sheet-close" data-close="invSheetOverlay">✕</button>
+    <h2>Add / Edit Ingredient</h2>
+    <input type="hidden" id="invEditId">
+    <div class="field"><label>Name</label><input type="text" id="invName" placeholder="e.g. Pork Belly"></div>
+    <div class="row2">
+      <div class="field"><label>Qty on hand</label><input type="number" id="invQty" placeholder="0"></div>
+      <div class="field"><label>Unit</label><input type="text" id="invUnit" placeholder="kg / pcs / L"></div>
+    </div>
+    <div class="field"><label>Low-stock alert below</label><input type="number" id="invLow" placeholder="0"></div>
+    <button class="btn btn-primary" id="saveInvBtn">Save</button>
+    <button class="btn btn-danger" id="deleteInvBtn" style="margin-top:8px;display:none;">Delete ingredient</button>
+  </div>
+</div>
+
+<!-- Add menu item sheet -->
+<div class="sheet-overlay" id="menuSheetOverlay">
+  <div class="sheet">
+    <button class="sheet-close" data-close="menuSheetOverlay">✕</button>
+    <h2>Add / Edit Menu Item</h2>
+    <input type="hidden" id="menuEditId">
+    <div class="field"><label>Name</label><input type="text" id="menuName" placeholder="e.g. Sisig"></div>
+    <div class="row2">
+      <div class="field"><label>Price (₱)</label><input type="number" id="menuPrice" placeholder="0"></div>
+      <div class="field"><label>Category</label><input type="text" id="menuCat" placeholder="Ulam / Pulutan"></div>
+    </div>
+    <button class="btn btn-primary" id="saveMenuBtn">Save</button>
+    <button class="btn btn-danger" id="deleteMenuBtn" style="margin-top:8px;display:none;">Delete item</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
